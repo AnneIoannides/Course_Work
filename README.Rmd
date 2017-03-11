@@ -1,0 +1,20 @@
+---
+title: "Assignment 1"
+author: "Anne Ioannides"
+date: "17 February 2017"
+output: html_document
+---
+## Hello Octocat
+
+I love Octocat. She's the coolest cat in town.
+
+![](octocat.png)
+
+``` {r quick_look, echo=TRUE}
+data("anscombe")
+dim.data.frame(anscombe)
+colnames(anscombe)
+head(anscombe)
+tail(anscombe)
+summary(anscombe)
+```
