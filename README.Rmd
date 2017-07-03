@@ -2,7 +2,8 @@
 title: "Assignment 1"
 author: "Anne Ioannides"
 date: "17 February 2017"
-output: html_document
+output:
+  html_document: default
 ---
 ## Hello Octocat
 
@@ -10,6 +11,7 @@ I love Octocat. She's the coolest cat in town.
 
 ![](octocat.png)
 
+#Assignment 2
 ``` {r quick_look, echo=TRUE}
 data("anscombe")
 dim.data.frame(anscombe)
@@ -19,9 +21,259 @@ tail(anscombe)
 summary(anscombe)
 ```
 
+#Assignment 3
 ``` {r xy_plot, echo=FALSE, fig.height= 8, fig.width= 8, fig.align= 'center', dev='svg', fig.path= '.figures/'}
 data("anscombe")
 anscombe
 with(anscombe, plot(x1,y1))
 abline(lm(y1 ~ x1, data = anscombe))
 ```
+
+#Assignment 4 
+###Dataframe Setup
+
+```{r data_import, echo = TRUE}
+#Here the data (analgesic) are imported from a csv file and structured as a dataframe, called df
+
+df <- read.csv(file="https://dl.dropboxusercontent.com/u/11805474/painblogr/biostats/assignments/analgesic.csv", header=TRUE, sep=",")
+
+```
+
+
+###Dataframe Exploration
+
+```{r data_summary, echo = TRUE}
+#Data dimensions are defined:
+dim(df)
+
+#Column names of df are listed
+colnames(df)
+
+#The first six rows of df are listed
+head(df)
+
+#The last six rows of df are listed
+tail(df)
+
+#Summary statistics (minimum, maximum, lower quartlile, median and upper quartile) for each column of df are listed
+summary(df)
+```
+
+
+###Data Tidying
+
+```{r data_tidy, echo = TRUE}
+
+library(tidyr)
+#Data are tidied using tidyr from wide to long format
+df_long <- gather(df, ID, Group, Measurement_1:Measurement_3)
+
+#Data are manipulated using dplyr
+library(dplyr)
+
+#The mean of each individual's measurements is calculated (summarised data)
+summary(group_by(df_long, ID))
+
+#The dataframe is printed
+print(df_long)
+```
+
+#Assignment 5
+###Chicken Weights
+
+__Hypotheses__  
+_Null Hypothesis:_
+No difference exists between the weights  of chickens consuming different feed types  
+_Alternative Hypothesis:_
+A difference exists between the weights of chickens consuming different feed types  
+
+__Statistical Test Details__  
+_Test Statistic:_  
+Kruskal-Wallis rank sum rest  
+_Assumptions:_  
+The errors are independent  
+Data are unmatched  
+Samples are drawn from populations with the same shape distributions  
+Samples are drawn from the population are random  
+Observations are independent of each other  
+Measured scale for the dependent variable is ordinal  
+
+```{r chicken_weights, echo = TRUE}
+chicken_weights <- read.csv(file = "https://dl.dropboxusercontent.com/u/11805474/painblogr/biostats/assignments/chick-weights.csv?dl=1", header=TRUE, sep=",")
+
+print(chicken_weights)
+
+#Plot-based exploration
+boxplot(chicken_weights$weight ~ chicken_weights$feed)
+
+#Kruskal-Wallis Test
+kruskal.test(weight ~ feed,
+             data = chicken_weights)
+
+#Post-hoc test with Holm correction
+pairwise.t.test(chicken_weights$weight, chicken_weights$feed, p.adjust.method = "holm", paired = FALSE)
+```
+_Interpretation:_  
+The Kruskal Wallis test showed that the weights of the chickens did differ based on their chicken feed (X^2 = 37.343, df = 5, p < 0.0001).   
+Post-hoc tests revealed that casein lead to significantly greater weight gain than horsebean (p < 0.0001), linseed (p = 0.0002) and soybean (p = 0.0053) but not meatmeal (p = 0.1823) or sunflower (p = 0.8125).  
+
+Horsebean feed yielded the lowest weight, where weight was significantly lower than meatmeal (p < 0.0001), soybean (p = 0.003) and sunflower (p < 0.0001) but not significantly lower than weights yielded by linseed (p = 0.0944).  
+
+Linseed was only found to have a significantly higher weight gain than horsebean (as reported above) but a significantly lower weight than sunflower (p < 0.0001) but not to meatmeal (p = 0.0944) or soybean (p = 0.5177).  
+
+Meatmeal feed was not not found to influence weight any more significantly than casein, linseed (as reported above), soybean (p = 0.5177) or sunflower (p = 0.1322). Horsebean was found to yield significantly lower weights (as reported above).  
+
+Soybean was found to yield significantly lighter chickens than casein (as reported above) and sunflower (p = 0.003), but significantly heavier chickens than horsebean (as reported above). There was no statistically significant difference between weights of chickens fed linseed or meatmeal compared to soybean.   
+
+
+###Hot Zone
+
+__Hypotheses__  
+_Null Hypothesis:_
+No difference between individuals' illness outcomes exists as a consequence of their water consumption  
+_Alternative Hypothesis:_
+A difference between individuals' illness outcomes exists as a consequence of their water consumption  
+
+__Statistical Test Details__  
+_Test Statistic:_    
+Cochran-Mantel-Haenszel Test  
+_Assumptions:_  
+The Odds Ratio is the same in different repeats of the experiment
+```{r hot_zone, echo = TRUE}
+hot_zone <- read.csv(file = "https://dl.dropboxusercontent.com/u/11805474/painblogr/biostats/assignments/gastroenteritis.csv?dl=1", header=TRUE, sep=",")
+
+#I initially printed the raw hot_zone data for view and decided on the data type
+
+#Data are categorical but ordinal in nature, therefore data are cross-tabulated
+xtabs(~Outcome + Consumption, data = hot_zone)
+
+#Plot-based exploration of data
+#A mosaic plot is elected for best visualisation
+
+hot_zone_exploration <- xtabs(~ hot_zone$Consumption + hot_zone$Outcome)
+
+mosaicplot(hot_zone_exploration)
+
+#Due to the data being ordinal, data are assigned scores (where the vcdExtra package is required)
+library(vcdExtra)
+
+#Scores are assigned as 1, 3, 2 (and not 1, 2, 3) as the second column is "> 4 glasses" and the last column is "1 - 4 glasses"
+CMHtest(hot_zone_exploration,
+        types = "cmeans",
+        cscores = c(1, 3, 2))
+
+detach(package: vcdExtra)
+```
+_Interpretation:_  
+The more water consumed by individuals, the more likely they were to become ill (X^2 = 9.8467, df = 1, p = 0.0017).
+
+
+###Nausea
+
+__Hypotheses__  
+_Null Hypothesis:_ No difference exists between nausea ratings before and after consumption of the 5HT3-receptor blocker  
+_Alternative Hypothesis:_ A difference between nausea ratings before and after consumption of the 5HT3-receptor blocker exists  
+
+__Statistical Test Details__  
+_Test Statistic:_  
+Wilcoxon signed-rank test  
+_Assumptions:_  
+The errors are independent  
+Matching is effective  
+Samples are drawn from populations with the same shape distributions  
+
+``` {r nausea, echo = TRUE}
+nausea <- read.csv(file = "https://dl.dropboxusercontent.com/u/11805474/painblogr/biostats/assignments/nausea.csv?dl=1", header=TRUE, sep=",")
+
+print(nausea)
+
+#Plot-based exploration
+nausea_exploration <- xtabs(~ nausea$Nausea_before + nausea$Nausea_after)
+
+mosaicplot(nausea_exploration)
+
+library(tidyr)
+
+#nausea_long <- gather(nausea, Nausea_before:Nausea_after)
+#print(nausea_long)
+
+library(dplyr)
+
+summary(nausea)
+
+wilcox.test(nausea$Nausea_before, nausea$Nausea_after,
+            paired = TRUE)
+
+```
+_Interpretation:_  
+There is no difference between the nausea ratings in patients before and after they took the 5HT3-receptor blocker (V = 26, p = 0.2906).
+
+#Assignment 6  
+###Housing Prices  
+
+__Hypotheses__  
+_Null Hypothesis:_  
+No relationship exists between the interest rate and the median house price in USD  
+_Alternative Hypothesis:_  
+A linear relationship exists between the interest rate and the median house price in USD  
+
+__Statistical Test Details__  
+_Test Statistic:_ 
+Linear Regression
+
+_Assumptions:_   
+A linear regression exists between interest rate and the median house price in USD  
+Observations are independent (impaired)  
+Interest rate is measured without error  
+Residuals (distance from the regression line) are normally distributed  
+Residuals have the same variance for all fitted values of the median house price (i.e. they are homoscedastic, where no relationship is seen between the interest rate and the size of the residual)
+
+```{r housing_prices, echo = TRUE}
+housing_prices <- read.csv(file = "https://dl.dropboxusercontent.com/u/11805474/painblogr/biostats/assignments/housing-prices.csv?dl=1", header=TRUE, sep=",")
+
+#I printed the data to see what they looked like
+print(housing_prices)
+
+library(ggplot2)
+
+#I used exploratory plots
+plot(housing_prices$interest_rate, housing_prices$median_house_price_USD, 
+     main = "The Relationship between interest rate and housing prices in USD", 
+     abline(lm(housing_prices$median_house_price_USD ~ housing_prices$interest_rate, 
+               data = housing_prices, 
+               lwd = 3, 
+               col = 4)))
+
+#Linear Regression
+housing_regression <- lm(housing_prices$median_house_price_USD ~ housing_prices$interest_rate, 
+                         data = housing_prices)
+
+summary(housing_regression)
+
+#Appropriate Diagnostic Criteria:
+#1. Residuals follow Normal Distribution
+qqnorm(housing_regression$residuals,
+       pch = 20,
+       col = "blue") #Because blue is my favourite colour
+qqline(housing_regression$residuals, 
+       lwd = 4,
+       col = "purple")
+
+#2. Homoskedasticity
+plot(x = housing_regression$fitted.values, 
+     y = housing_regression$residuals, 
+     xlab = "Values", 
+     ylab = "Residual values",
+     pch = 20,
+     col = 4,
+     abline(h = 0,
+            lwd = 4, 
+            col = "green"))
+
+#Plotting the linear model
+glm(housing_prices$median_house_price_USD ~ housing_prices$interest_rate,
+    data = housing_prices)
+
+```
+_Interpretation:_  
+A very weak negative correlation exists between interest rate and the median house price (R^2 = 0.2848). However, the correlation is mildly significant (F = 6.947, df = 14, p = 0.0194). Therefore, as the interest rate increases, the median house price mildly decreases.
